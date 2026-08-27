@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
-const { Telegraf, session } = require('telegraf');   // ← правильно
+const { Telegraf, session } = require('telegraf');
 const db = require('./db');
 
 const app = express();
@@ -207,18 +207,16 @@ function isAdmin(ctx) {
     return ADMIN_IDS.includes(ctx.from.id);
 }
 
-// Вспомогательная функция для API-вызовов из бота (используется для загрузки PDF)
-async function apiCall(method, endpoint, data = null) {
-    const url = `${process.env.APP_URL || 'http://localhost:3000'}${endpoint}`;
-    const config = {
-        method,
-        url,
-        headers: { 'x-admin-token': ADMIN_TOKEN, 'Content-Type': 'application/json' },
-        data
-    };
-    const response = await axios(config);
-    return response.data;
-}
+// ---------- Сессия ----------
+bot.use(session());
+
+// ---------- Логирование (для отладки) ----------
+bot.use((ctx, next) => {
+    if (ctx.message) {
+        console.log(`📩 Получено сообщение от ${ctx.from.id}: ${ctx.message.text || '(не текст)'}`);
+    }
+    return next();
+});
 
 // ---------- Команды бота ----------
 bot.start((ctx) => {
@@ -249,15 +247,11 @@ bot.command('admin', (ctx) => {
     );
 });
 
-// ---------- Сессия ----------
-bot.use(session());
-
-// Обработчики диалогов (аналогично bot.js, но с прямым вызовом db)
+// ---------- Обработчики диалогов ----------
 bot.use(async (ctx, next) => {
     if (!ctx.message || !ctx.message.text) return next();
     const text = ctx.message.text.trim();
     const state = ctx.session.state;
-
     if (!state || !state.step) return next();
 
     const handlers = {
@@ -297,7 +291,6 @@ bot.use(async (ctx, next) => {
                     break;
                 case 6:
                     state.video_url = text === 'пропустить' ? '' : text;
-                    // Сохраняем в базу
                     const { type, title, description, course, hashtags, pdf_url, video_url } = state;
                     const sql = `
                         INSERT INTO materials (type, title, description, course, hashtags, pdf_url, video_url)
@@ -431,26 +424,27 @@ bot.use(async (ctx, next) => {
     }
 });
 
-// Команды-стартеры диалогов
 bot.command('add_material', (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('⛔ Нет прав.');
+    if (!ctx.session) ctx.session = {};
     ctx.session.state = { step: 'add_material', currentStep: 0 };
     ctx.reply('Введите тип материала (конспект, видео, реферат, комплекс, тест):');
 });
 
 bot.command('add_test', (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('⛔ Нет прав.');
+    if (!ctx.session) ctx.session = {};
     ctx.session.state = { step: 'add_test', currentStep: 0 };
     ctx.reply('Введите тему теста (topic):');
 });
 
 bot.command('add_question', (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('⛔ Нет прав.');
+    if (!ctx.session) ctx.session = {};
     ctx.session.state = { step: 'add_question', currentStep: 0 };
     ctx.reply('Введите ID теста, к которому добавить вопрос:');
 });
 
-// Список материалов (прямой запрос к БД)
 bot.command('list_materials', async (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('⛔ Нет прав.');
     db.all('SELECT * FROM materials ORDER BY created_at DESC', (err, rows) => {
@@ -471,7 +465,6 @@ bot.command('list_materials', async (ctx) => {
     });
 });
 
-// Список тестов
 bot.command('list_tests', async (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('⛔ Нет прав.');
     db.all('SELECT * FROM tests ORDER BY created_at DESC', (err, rows) => {
@@ -492,7 +485,6 @@ bot.command('list_tests', async (ctx) => {
     });
 });
 
-// Загрузка PDF (обработка файлов)
 bot.on('document', async (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('⛔ Нет прав.');
     const file = ctx.message.document;
@@ -535,7 +527,6 @@ app.listen(PORT, async () => {
             console.error('❌ Ошибка установки webhook:', err);
         }
     } else {
-        // В режиме разработки используем Long Polling
         await bot.launch();
         console.log('🤖 Бот запущен в режиме Long Polling (для разработки)');
     }
