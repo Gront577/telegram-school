@@ -511,6 +511,14 @@ bot.on('document', async (ctx) => {
     }
 });
 
+
+// Логирование всех запросов к /webhook
+app.use('/webhook', (req, res, next) => {
+    console.log('📨 Получен запрос на /webhook');
+    console.log('Body:', req.body);
+    next();
+});
+
 // ---------- Webhook для бота ----------
 app.use('/webhook', bot.webhookCallback('/webhook'));
 
