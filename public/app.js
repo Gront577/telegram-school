@@ -72,15 +72,29 @@ async function loadMaterials(tags = '', course = '') {
         await delay(200);
         renderMaterials(data);
     } catch (err) {
-        materialsList.innerHTML = `<div class="error-message"><span>⚠️</span><p>Не удалось загрузить материалы.</p><button onclick="loadMaterials()">Обновить</button></div>`;
+        console.error('Ошибка загрузки материалов:', err);
+        materialsList.innerHTML = `
+            <div class="error-message">
+                <span>⚠️</span>
+                <p>Не удалось загрузить материалы.</p>
+                <button onclick="loadMaterials()">Обновить</button>
+            </div>
+        `;
     } finally {
         hideLoading();
     }
 }
 
 function renderMaterials(materials) {
-    if (!materials.length) {
-        materialsList.innerHTML = `<div class="empty-state"><span>📭</span><p>Материалов не найдено.</p><button onclick="resetFilters()">Сбросить фильтры</button></div>`;
+    console.log('🔄 Рендеринг материалов, количество:', materials.length);
+    if (!materials || materials.length === 0) {
+        materialsList.innerHTML = `
+            <div class="empty-state">
+                <span>📭</span>
+                <p>Материалов не найдено.</p>
+                <button onclick="resetFilters()">Сбросить фильтры</button>
+            </div>
+        `;
         return;
     }
 
@@ -112,6 +126,7 @@ function renderMaterials(materials) {
 
     materialsList.innerHTML = html;
 
+    // Навешиваем обработчики кликов на карточки
     document.querySelectorAll('.material-card').forEach(card => {
         card.addEventListener('click', () => {
             const id = card.dataset.id;
@@ -130,12 +145,12 @@ async function openMaterial(id) {
         const res = await fetch(`${apiBase}/materials/${id}`);
         if (!res.ok) throw new Error('Не найден');
         const m = await res.json();
-        // Проверяем, есть ли тест, привязанный к этому материалу
         const testRes = await fetch(`${apiBase}/tests?material_id=${id}`);
         const tests = await testRes.json();
         const linkedTest = tests && tests.length > 0 ? tests[0] : null;
         showModal(m, linkedTest);
     } catch (err) {
+        console.error('Ошибка открытия материала:', err);
         tg.showAlert('Не удалось загрузить материал.');
     }
 }
@@ -150,22 +165,18 @@ async function showModal(m, linkedTest) {
     if (m.pdf_url) buttonsHtml += `<a href="${m.pdf_url}" target="_blank" class="btn">📥 Скачать PDF</a>`;
     if (m.video_url) buttonsHtml += `<a href="${m.video_url}" target="_blank" class="btn btn-secondary">🎬 Смотреть видео</a>`;
 
-    // Кнопка теста, если есть связанный тест
     let testButtonHtml = '';
     if (linkedTest) {
         testButtonHtml = `<button onclick="openQuiz(${linkedTest.id})" class="btn btn-success" style="margin-top: 10px; width: 100%;">✅ Пройти тест: ${linkedTest.title}</button>`;
-    } else {
-        // Если нет связанного, но есть по теме – пробуем найти по первому хештегу (запасной вариант)
-        if (hashtagArray.length > 0) {
-            const mainTopic = hashtagArray[0];
-            try {
-                const res = await fetch(`${apiBase}/tests?topic=${mainTopic}`);
-                const tests = await res.json();
-                if (tests && tests.length > 0) {
-                    testButtonHtml = `<button onclick="openQuiz(${tests[0].id})" class="btn btn-success" style="margin-top: 10px; width: 100%;">✅ Пройти тест по теме "${mainTopic}"</button>`;
-                }
-            } catch (e) {}
-        }
+    } else if (hashtagArray.length > 0) {
+        const mainTopic = hashtagArray[0];
+        try {
+            const res = await fetch(`${apiBase}/tests?topic=${mainTopic}`);
+            const tests = await res.json();
+            if (tests && tests.length > 0) {
+                testButtonHtml = `<button onclick="openQuiz(${tests[0].id})" class="btn btn-success" style="margin-top: 10px; width: 100%;">✅ Пройти тест по теме "${mainTopic}"</button>`;
+            }
+        } catch (e) {}
     }
 
     if (!m.pdf_url && !m.video_url && !testButtonHtml) {
@@ -184,12 +195,113 @@ async function showModal(m, linkedTest) {
     requestAnimationFrame(() => modal.classList.add('modal-open'));
 }
 
-// Остальные функции (openQuiz, renderQuestion, selectAnswer, nextQuestion, showQuizResults, closeModalHandler, resetFilters) остаются без изменений,
-// но для краткости они приведены ниже (они уже были в исходном app.js).
+// ---------- Квиз ----------
+async function openQuiz(testId) {
+    try {
+        const res = await fetch(`${apiBase}/tests/${testId}`);
+        if (!res.ok) throw new Error('Тест не найден');
+        currentQuiz = await res.json();
+        currentQuestionIndex = 0;
+        quizScore = 0;
+        selectedAnswers = [];
+        renderQuestion();
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.classList.add('modal-open'));
+    } catch (err) {
+        console.error('Ошибка загрузки теста:', err);
+        tg.showAlert('Не удалось загрузить тест.');
+    }
+}
 
-// ... (код openQuiz, renderQuestion, selectAnswer, nextQuestion, showQuizResults, closeModalHandler, resetFilters) ...
-// В целях экономии места опустим их, они идентичны предыдущей версии.
-// Но в итоговом файле они должны быть.
+function renderQuestion() {
+    if (!currentQuiz || currentQuestionIndex >= currentQuiz.questions.length) {
+        showQuizResults();
+        return;
+    }
+
+    const q = currentQuiz.questions[currentQuestionIndex];
+    const progress = Math.round(((currentQuestionIndex) / currentQuiz.questions.length) * 100);
+
+    const optionsHtml = q.options.map((opt, idx) => `
+        <div class="quiz-option" onclick="selectAnswer(${idx}, this)">
+            <span class="option-letter">${String.fromCharCode(65 + idx)}</span>
+            <span class="option-text">${opt}</span>
+        </div>
+    `).join('');
+
+    modalBody.innerHTML = `
+        <div class="quiz-header">
+            <h3>${currentQuiz.title}</h3>
+            <div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div>
+            <p class="question-counter">Вопрос ${currentQuestionIndex + 1} из ${currentQuiz.questions.length}</p>
+        </div>
+        <div class="quiz-question">
+            <p>${q.question_text}</p>
+        </div>
+        <div class="quiz-options">
+            ${optionsHtml}
+        </div>
+        <button id="next-question-btn" class="btn btn-success" style="width: 100%; margin-top: 20px; display: none;" onclick="nextQuestion()">
+            ${currentQuestionIndex === currentQuiz.questions.length - 1 ? 'Завершить тест' : 'Следующий вопрос'}
+        </button>
+    `;
+}
+
+window.selectAnswer = function(selectedIndex, element) {
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    document.querySelectorAll('.quiz-option').forEach(opt => {
+        opt.classList.remove('selected');
+        opt.style.pointerEvents = 'none';
+    });
+    element.classList.add('selected');
+    selectedAnswers[currentQuestionIndex] = selectedIndex;
+    document.getElementById('next-question-btn').style.display = 'block';
+};
+
+window.nextQuestion = function() {
+    const q = currentQuiz.questions[currentQuestionIndex];
+    if (selectedAnswers[currentQuestionIndex] === q.correct_option_index) {
+        quizScore++;
+    }
+    currentQuestionIndex++;
+    renderQuestion();
+};
+
+function showQuizResults() {
+    const total = currentQuiz.questions.length;
+    const percentage = Math.round((quizScore / total) * 100);
+    let message = `Вы ответили правильно на ${quizScore} из ${total} вопросов (${percentage}%).`;
+    if (percentage === 100) message += '\n🎉 Отличный результат!';
+    else if (percentage >= 70) message += '\n👍 Хороший результат!';
+    else message += '\n📚 Стоит повторить материал.';
+
+    modalBody.innerHTML = `
+        <div class="quiz-result" style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 10px;">${percentage >= 70 ? '🏆' : '📖'}</div>
+            <h2>Тест завершен!</h2>
+            <p style="font-size: 18px; margin: 20px 0; white-space: pre-line;">${message}</p>
+            <button onclick="closeModalHandler()" class="btn">Закрыть</button>
+        </div>
+    `;
+    tg.showAlert(message);
+}
+
+// ---------- Функция закрытия модалки ----------
+function closeModalHandler() {
+    modal.classList.remove('modal-open');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        currentQuiz = null;
+    }, 300);
+}
+
+// ---------- Сброс фильтров ----------
+function resetFilters() {
+    currentFilter = '';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    loadMaterials('');
+    materialsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 // ============================================================
 // 6. Обработчики событий
