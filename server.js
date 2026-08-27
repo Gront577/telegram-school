@@ -29,7 +29,6 @@ app.use(express.static('public'));
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-// Настройка multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
@@ -199,9 +198,7 @@ app.post('/api/upload', adminAuth, upload.single('file'), (req, res) => {
     res.json({ url: fileUrl });
 });
 
-// ---------- Обработчики бота (команды) ----------
-
-// Администраторы
+// ---------- Обработчики бота ----------
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
 function isAdmin(ctx) {
     return ADMIN_IDS.includes(ctx.from.id);
@@ -218,7 +215,13 @@ bot.use((ctx, next) => {
     return next();
 });
 
-// ---------- Команды бота ----------
+// ---------- Обработка ошибок бота ----------
+bot.catch((err, ctx) => {
+    console.error('❌ Ошибка в боте:', err);
+    console.error('Контекст:', ctx.update);
+});
+
+// ---------- Команды ----------
 bot.start((ctx) => {
     ctx.reply(
         `📚 Добро пожаловать в Онлайн Школу Помощь!\n\n` +
@@ -247,7 +250,7 @@ bot.command('admin', (ctx) => {
     );
 });
 
-// ---------- Обработчики диалогов ----------
+// ---------- Диалоги ----------
 bot.use(async (ctx, next) => {
     if (!ctx.message || !ctx.message.text) return next();
     const text = ctx.message.text.trim();
@@ -424,6 +427,7 @@ bot.use(async (ctx, next) => {
     }
 });
 
+// Команды для запуска диалогов
 bot.command('add_material', (ctx) => {
     if (!isAdmin(ctx)) return ctx.reply('⛔ Нет прав.');
     if (!ctx.session) ctx.session = {};
@@ -511,20 +515,10 @@ bot.on('document', async (ctx) => {
     }
 });
 
-
-// Логирование всех запросов к /webhook
-app.use('/webhook', (req, res, next) => {
-    console.log('📨 Получен запрос на /webhook');
-    console.log('Body:', req.body);
-    next();
-});
-
 // ---------- Webhook для бота ----------
 app.use('/webhook', bot.webhookCallback('/webhook'));
 
 // ---------- Запуск сервера ----------
-let isBotRunning = false;
-
 app.listen(PORT, async () => {
     console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
 
@@ -536,10 +530,8 @@ app.listen(PORT, async () => {
         } catch (err) {
             console.error('❌ Ошибка установки webhook:', err);
         }
-        // В режиме webhook бот не запускается через launch()
     } else {
         await bot.launch();
-        isBotRunning = true;
         console.log('🤖 Бот запущен в режиме Long Polling (для разработки)');
     }
 });
