@@ -535,13 +535,3 @@ app.listen(PORT, async () => {
         console.log('🤖 Бот запущен в режиме Long Polling (для разработки)');
     }
 });
-
-// Graceful shutdown – только если бот запущен
-process.once('SIGINT', () => {
-    if (isBotRunning) bot.stop('SIGINT');
-    process.exit(0);
-});
-process.once('SIGTERM', () => {
-    if (isBotRunning) bot.stop('SIGTERM');
-    process.exit(0);
-});
