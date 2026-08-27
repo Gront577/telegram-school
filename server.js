@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
-const { Telegraf, session } = require('telegraf');
+const { Telegraf, session } = require('telegraf');   // ← правильно
 const db = require('./db');
 
 const app = express();
@@ -141,7 +141,7 @@ app.post('/api/materials', adminAuth, (req, res) => {
 app.put('/api/materials/:id', adminAuth, (req, res) => {
     const { type, title, description, course, hashtags, pdf_url, video_url } = req.body;
     const sql = `
-        UPDATE materials 
+        UPDATE materials
         SET type = COALESCE(?, type),
             title = COALESCE(?, title),
             description = COALESCE(?, description),
@@ -249,9 +249,7 @@ bot.command('admin', (ctx) => {
     );
 });
 
-// Добавление материала (через пошаговый диалог)
-// Используем сессию для хранения состояния. Устанавливаем её прямо здесь.
-const session = require('telegraf/session');
+// ---------- Сессия ----------
 bot.use(session());
 
 // Обработчики диалогов (аналогично bot.js, но с прямым вызовом db)
