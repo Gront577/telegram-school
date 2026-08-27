@@ -139,7 +139,7 @@ app.post('/api/materials', adminAuth, (req, res) => {
 app.put('/api/materials/:id', adminAuth, (req, res) => {
     const { type, title, description, course, hashtags, pdf_url, video_url } = req.body;
     const sql = `
-        UPDATE materials 
+        UPDATE materials
         SET type = COALESCE(?, type),
             title = COALESCE(?, title),
             description = COALESCE(?, description),
@@ -249,7 +249,11 @@ bot.command('admin', (ctx) => {
 bot.use(async (ctx, next) => {
     if (!ctx.message || !ctx.message.text) return next();
     const text = ctx.message.text.trim();
+
+    // Убедимся, что сессия существует
+    if (!ctx.session) ctx.session = {};
     const state = ctx.session.state;
+
     if (!state || !state.step) return next();
 
     const handlers = {
@@ -518,7 +522,10 @@ app.get('/test', (req, res) => {
 app.post('/webhook', (req, res) => {
     console.log('📨 POST /webhook received');
     console.log('📦 Body:', JSON.stringify(req.body).slice(0, 200));
-    bot.webhookCallback('/webhook')(req, res);
+    bot.webhookCallback('/webhook')(req, res).catch(err => {
+        console.error('❌ Ошибка в webhook:', err);
+        res.status(500).send('Webhook error');
+    });
 });
 
 // ---------- Запуск ----------
