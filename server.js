@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
-const { Telegraf } = require('telegraf');
+const { Telegraf, session } = require('telegraf');
 const db = require('./db');
 
 const app = express();
