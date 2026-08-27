@@ -515,6 +515,8 @@ bot.on('document', async (ctx) => {
 app.use('/webhook', bot.webhookCallback('/webhook'));
 
 // ---------- Запуск сервера ----------
+let isBotRunning = false;
+
 app.listen(PORT, async () => {
     console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
 
@@ -526,12 +528,20 @@ app.listen(PORT, async () => {
         } catch (err) {
             console.error('❌ Ошибка установки webhook:', err);
         }
+        // В режиме webhook бот не запускается через launch()
     } else {
         await bot.launch();
+        isBotRunning = true;
         console.log('🤖 Бот запущен в режиме Long Polling (для разработки)');
     }
 });
 
-// Graceful shutdown
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// Graceful shutdown – только если бот запущен
+process.once('SIGINT', () => {
+    if (isBotRunning) bot.stop('SIGINT');
+    process.exit(0);
+});
+process.once('SIGTERM', () => {
+    if (isBotRunning) bot.stop('SIGTERM');
+    process.exit(0);
+});
