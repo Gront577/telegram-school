@@ -409,6 +409,19 @@ if (filtersWrapper) {
 }
 
 // ============================================================
+// Фича: клик по заголовку "Библиотека" → сброс фильтров
+// ============================================================
+const libraryTitle = document.getElementById('library-title');
+if (libraryTitle) {
+    libraryTitle.addEventListener('click', () => {
+        resetFilters();
+        // Плавно скроллим к началу списка
+        materialsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
+
+
+// ============================================================
 // 7. Запуск
 // ============================================================
 loadMaterials('');
