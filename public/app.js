@@ -393,6 +393,22 @@ filtersContainer.addEventListener('click', (e) => {
 updateSlider(null);
 
 // ============================================================
+// Горизонтальный скролл фильтров колёсиком мыши
+// ============================================================
+const filtersWrapper = document.getElementById('filters-wrapper');
+
+if (filtersWrapper) {
+    filtersWrapper.addEventListener('wheel', function(e) {
+        // Если скролл вертикальный (deltaY), преобразуем в горизонтальный
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            e.preventDefault();
+            this.scrollLeft += e.deltaY;
+        }
+        // Если уже горизонтальный (deltaX) — оставляем как есть
+    }, { passive: false });
+}
+
+// ============================================================
 // 7. Запуск
 // ============================================================
 loadMaterials('');
