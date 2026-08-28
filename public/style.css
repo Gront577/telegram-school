@@ -589,3 +589,84 @@ header h1 {
     .material-card { padding: 18px 20px; }
     .modal-content { padding: 24px 20px; }
 }
+/* ===== АВАТАР ===== */
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+}
+
+.avatar:hover {
+    transform: scale(1.05);
+}
+
+/* ===== РЕДАКТОР ПЕРСОНАЖА ===== */
+.character-editor {
+    padding: 4px 0;
+}
+
+.character-preview-wrapper {
+    position: relative;
+}
+
+#character-preview {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.editor-section {
+    margin: 14px 0 6px;
+}
+
+.editor-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    text-align: left;
+}
+
+.editor-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+}
+
+.editor-option {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid transparent;
+    border-radius: 30px;
+    padding: 4px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.editor-option:hover {
+    background: rgba(255,255,255,0.12);
+    transform: scale(1.02);
+}
+
+.editor-option.active {
+    background: rgba(129, 140, 248, 0.2);
+    border-color: #818cf8;
+    color: #fff;
+}
+
+/* Для выбора цвета кожи — квадратик с цветом */
+.editor-option[style*="background"] {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    padding: 0;
+}
