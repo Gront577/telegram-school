@@ -6,21 +6,25 @@
     <title>Онлайн Школа Помощи</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="app">
     <header>
-        <h1>📚 Библиотека материалов</h1>
-        <div id="filters">
-            <button class="filter-btn" data-tag="анатомия">#анатомия</button>
-            <button class="filter-btn" data-tag="физиология">#физиология</button>
-            <button class="filter-btn" data-tag="фармакология">#фармакология</button>
-            <button class="filter-btn" data-tag="патанатомия">#патанатомия</button>
-            <button class="filter-btn" data-tag="конспект">#конспект</button>
-            <button class="filter-btn" data-tag="видео">#видео</button>
-            <button class="filter-btn" data-tag="реферат">#реферат</button>
-            <button class="filter-btn" data-tag="комплекс">#комплекс</button>
-            <button id="reset-filters" class="filter-btn reset">Сбросить</button>
+        <h1>📚 Библиотека</h1>
+        <div id="filters-wrapper">
+            <div id="filters">
+                <button class="filter-chip" data-tag="анатомия">🧬 Анатомия</button>
+                <button class="filter-chip" data-tag="физиология">❤️ Физиология</button>
+                <button class="filter-chip" data-tag="фармакология">💊 Фармакология</button>
+                <button class="filter-chip" data-tag="патанатомия">🔬 Патанатомия</button>
+                <button class="filter-chip" data-tag="конспект">📄 Конспект</button>
+                <button class="filter-chip" data-tag="видео">🎬 Видео</button>
+                <button class="filter-chip" data-tag="реферат">📝 Реферат</button>
+                <button class="filter-chip" data-tag="комплекс">📦 Комплекс</button>
+                <button id="reset-filters" class="filter-chip reset">✕ Сбросить</button>
+            </div>
+            <div id="filter-slider"></div>
         </div>
     </header>
     <main id="materials-list">
@@ -30,7 +34,7 @@
 
 <!-- Модальное окно -->
 <div id="modal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content glass">
         <span class="close">&times;</span>
         <div id="modal-body"></div>
     </div>

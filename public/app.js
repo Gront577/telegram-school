@@ -25,6 +25,7 @@ const modal = document.getElementById('modal');
 const modalBody = document.getElementById('modal-body');
 const closeModal = document.querySelector('.close');
 const filtersContainer = document.getElementById('filters');
+const filterSlider = document.getElementById('filter-slider');
 
 // ============================================================
 // 4. Вспомогательные функции
@@ -52,6 +53,37 @@ function getMetaInfo(type) {
 function getTypeEmoji(type) {
     const map = { 'конспект': '📘', 'видео': '🎬', 'реферат': '📄', 'комплекс': '📦', 'тест': '✅' };
     return map[type] || '📎';
+}
+
+// ---------- Ripple-эффект ----------
+function createRipple(e, element) {
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    element.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+}
+
+// ---------- Управление слайдером фильтров ----------
+function updateSlider(activeChip) {
+    if (!activeChip) {
+        filterSlider.style.width = '0';
+        filterSlider.style.left = '0';
+        return;
+    }
+    const wrapper = document.getElementById('filters-wrapper');
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const chipRect = activeChip.getBoundingClientRect();
+    const left = chipRect.left - wrapperRect.left + wrapper.scrollLeft;
+    const width = chipRect.width;
+    filterSlider.style.left = left + 'px';
+    filterSlider.style.width = width + 'px';
 }
 
 // ============================================================
@@ -124,9 +156,26 @@ function renderMaterials(materials) {
         `;
     }).join('');
 
-    materialsList.innerHTML = html;
+    // Плавная смена: сначала убираем старые карточки с анимацией
+    const oldCards = materialsList.querySelectorAll('.material-card');
+    if (oldCards.length) {
+        oldCards.forEach(card => card.classList.add('filtering-out'));
+        setTimeout(() => {
+            materialsList.innerHTML = html;
+            // Добавляем класс filtering-in для появления
+            materialsList.querySelectorAll('.material-card').forEach((card, i) => {
+                card.style.animationDelay = (i * 0.06) + 's';
+                card.classList.add('filtering-in');
+            });
+        }, 300);
+    } else {
+        materialsList.innerHTML = html;
+        materialsList.querySelectorAll('.material-card').forEach((card, i) => {
+            card.style.animationDelay = (i * 0.06) + 's';
+        });
+    }
 
-    // Навешиваем обработчики кликов на карточки
+    // Навешиваем обработчики кликов
     document.querySelectorAll('.material-card').forEach(card => {
         card.addEventListener('click', () => {
             const id = card.dataset.id;
@@ -286,7 +335,6 @@ function showQuizResults() {
     tg.showAlert(message);
 }
 
-// ---------- Функция закрытия модалки ----------
 function closeModalHandler() {
     modal.classList.remove('modal-open');
     setTimeout(() => {
@@ -295,10 +343,12 @@ function closeModalHandler() {
     }, 300);
 }
 
-// ---------- Сброс фильтров ----------
 function resetFilters() {
     currentFilter = '';
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    // Скрываем слайдер
+    filterSlider.style.width = '0';
+    filterSlider.style.left = '0';
     loadMaterials('');
     materialsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -312,18 +362,35 @@ modal.addEventListener('click', (e) => {
 });
 
 filtersContainer.addEventListener('click', (e) => {
-    const btn = e.target.closest('.filter-btn');
-    if (!btn) return;
-    if (btn.id === 'reset-filters') {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+
+    // Ripple-эффект
+    createRipple(e, chip);
+
+    if (chip.id === 'reset-filters') {
         resetFilters();
         return;
     }
-    btn.classList.toggle('active');
+
+    // Переключение активности
+    const wasActive = chip.classList.contains('active');
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    if (!wasActive) {
+        chip.classList.add('active');
+    }
+    // Обновляем слайдер
+    const activeChip = document.querySelector('.filter-chip.active');
+    updateSlider(activeChip);
+
     const activeTags = [];
-    document.querySelectorAll('.filter-btn.active').forEach(b => activeTags.push(b.dataset.tag));
+    document.querySelectorAll('.filter-chip.active').forEach(c => activeTags.push(c.dataset.tag));
     currentFilter = activeTags.join(',');
     loadMaterials(currentFilter);
 });
+
+// Инициализация слайдера (скрыт по умолчанию)
+updateSlider(null);
 
 // ============================================================
 // 7. Запуск
