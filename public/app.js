@@ -18,6 +18,71 @@ let quizScore = 0;
 let selectedAnswers = [];
 
 // ============================================================
+// Данные пользователя Telegram
+// ============================================================
+const user = tg.initDataUnsafe?.user || {};
+const userId = user.id || '—';
+const firstName = user.first_name || 'Гость';
+const lastName = user.last_name || '';
+const username = user.username || '';
+const initials = (firstName[0] || '') + (lastName[0] || '');
+
+// Рендерим аватар
+const avatarEl = document.getElementById('avatar');
+if (avatarEl) {
+    avatarEl.textContent = initials || '👤';
+    avatarEl.title = firstName + ' ' + lastName;
+}
+
+// Функция показа профиля
+function showProfile() {
+    const modalBody = document.getElementById('modal-body');
+    if (!modalBody) return;
+
+    modalBody.innerHTML = `
+        <div style="text-align: center;">
+            <div class="profile-avatar">${initials || '👤'}</div>
+            <div class="profile-name">${firstName} ${lastName}</div>
+            ${username ? `<div class="profile-username">@${username}</div>` : ''}
+            <div class="profile-id">ID: ${userId}</div>
+            <div class="profile-stats">
+                <div class="profile-stat-item">
+                    <div class="value">0</div>
+                    <div class="label">Тестов пройдено</div>
+                </div>
+                <div class="profile-stat-item">
+                    <div class="value">0%</div>
+                    <div class="label">Средний результат</div>
+                </div>
+                <div class="profile-stat-item">
+                    <div class="value">0</div>
+                    <div class="label">Материалов просмотрено</div>
+                </div>
+            </div>
+            <button id="profile-close-btn" class="btn" style="margin-top: 24px; width: 100%;">Закрыть</button>
+        </div>
+    `;
+
+    // Обработчик для кнопки закрытия
+    document.getElementById('profile-close-btn')?.addEventListener('click', closeModalHandler);
+    // Открываем модалку
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('modal-open'));
+}
+
+// Обработчик клика по аватару
+document.getElementById('profile-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showProfile();
+});
+
+// Клик по заголовку "Библиотека" → сброс фильтров
+document.getElementById('library-title')?.addEventListener('click', () => {
+    resetFilters();
+    materialsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// ============================================================
 // 3. DOM-элементы
 // ============================================================
 const materialsList = document.getElementById('materials-list');

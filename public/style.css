@@ -512,3 +512,85 @@ header h1 {
     .material-card { padding: 18px 20px; }
     .modal-content { padding: 24px 20px; }
 }
+
+/* ===== АВАТАР ===== */
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+    color: #fff;
+    text-transform: uppercase;
+    user-select: none;
+    transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.05);
+}
+
+/* ===== ПРОФИЛЬ (внутри модалки) ===== */
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 32px;
+    color: #fff;
+    margin: 0 auto 16px;
+    text-transform: uppercase;
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    color: #fff;
+}
+
+.profile-username {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 16px;
+    margin-top: 4px;
+}
+
+.profile-id {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.profile-stat-item {
+    text-align: center;
+}
+
+.profile-stat-item .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #818cf8;
+}
+
+.profile-stat-item .label {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 4px;
+}

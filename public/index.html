@@ -11,7 +11,12 @@
 <body>
 <div id="app">
     <header>
-        <h1 id="library-title">📚 Библиотека</h1>   <!-- ← добавлен id -->
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <h1 id="library-title" style="cursor: pointer;">📚 Библиотека</h1>
+            <div id="profile-btn" style="cursor: pointer; display: flex; align-items: center;">
+                <div id="avatar" class="avatar"></div>
+            </div>
+        </div>
         <div id="filters-wrapper">
             <div id="filters">
                 <button class="filter-chip" data-tag="анатомия">🧬 Анатомия</button>
@@ -33,9 +38,9 @@
     </main>
 </div>
 
-<!-- Модальное окно -->
+<!-- Модальное окно (универсальное) -->
 <div id="modal" class="modal">
-    <div class="modal-content glass">
+    <div class="modal-content">
         <span class="close">&times;</span>
         <div id="modal-body"></div>
     </div>
