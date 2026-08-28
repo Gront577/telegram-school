@@ -5,7 +5,34 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 
 // ============================================================
-// 2. Конфигурация и Состояние
+// 2. Данные пользователя Telegram
+// ============================================================
+// Получаем данные из initDataUnsafe
+const initData = tg.initDataUnsafe || {};
+const user = initData.user || {};
+const userId = user.id || null;
+const firstName = user.first_name || 'Гость';
+const lastName = user.last_name || '';
+const username = user.username || '';
+const initials = (firstName[0] || '') + (lastName[0] || '');
+
+console.log('Telegram user data:', user);
+console.log('UserId:', userId);
+
+// Если userId отсутствует, данные не получены (возможно, страница открыта напрямую, а не через Telegram)
+if (!userId) {
+    console.warn('Данные пользователя не получены. Откройте приложение через Telegram.');
+}
+
+// Рендерим аватар в шапке
+const avatarEl = document.getElementById('avatar');
+if (avatarEl) {
+    avatarEl.textContent = initials || '👤';
+    avatarEl.title = firstName + ' ' + lastName;
+}
+
+// ============================================================
+// 3. Конфигурация и Состояние
 // ============================================================
 const apiBase = '/api';
 let currentFilter = '';
@@ -18,72 +45,7 @@ let quizScore = 0;
 let selectedAnswers = [];
 
 // ============================================================
-// Данные пользователя Telegram
-// ============================================================
-const user = tg.initDataUnsafe?.user || {};
-const userId = user.id || '—';
-const firstName = user.first_name || 'Гость';
-const lastName = user.last_name || '';
-const username = user.username || '';
-const initials = (firstName[0] || '') + (lastName[0] || '');
-
-// Рендерим аватар
-const avatarEl = document.getElementById('avatar');
-if (avatarEl) {
-    avatarEl.textContent = initials || '👤';
-    avatarEl.title = firstName + ' ' + lastName;
-}
-
-// Функция показа профиля
-function showProfile() {
-    const modalBody = document.getElementById('modal-body');
-    if (!modalBody) return;
-
-    modalBody.innerHTML = `
-        <div style="text-align: center;">
-            <div class="profile-avatar">${initials || '👤'}</div>
-            <div class="profile-name">${firstName} ${lastName}</div>
-            ${username ? `<div class="profile-username">@${username}</div>` : ''}
-            <div class="profile-id">ID: ${userId}</div>
-            <div class="profile-stats">
-                <div class="profile-stat-item">
-                    <div class="value">0</div>
-                    <div class="label">Тестов пройдено</div>
-                </div>
-                <div class="profile-stat-item">
-                    <div class="value">0%</div>
-                    <div class="label">Средний результат</div>
-                </div>
-                <div class="profile-stat-item">
-                    <div class="value">0</div>
-                    <div class="label">Материалов просмотрено</div>
-                </div>
-            </div>
-            <button id="profile-close-btn" class="btn" style="margin-top: 24px; width: 100%;">Закрыть</button>
-        </div>
-    `;
-
-    // Обработчик для кнопки закрытия
-    document.getElementById('profile-close-btn')?.addEventListener('click', closeModalHandler);
-    // Открываем модалку
-    modal.style.display = 'flex';
-    requestAnimationFrame(() => modal.classList.add('modal-open'));
-}
-
-// Обработчик клика по аватару
-document.getElementById('profile-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    showProfile();
-});
-
-// Клик по заголовку "Библиотека" → сброс фильтров
-document.getElementById('library-title')?.addEventListener('click', () => {
-    resetFilters();
-    materialsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
-
-// ============================================================
-// 3. DOM-элементы
+// 4. DOM-элементы
 // ============================================================
 const materialsList = document.getElementById('materials-list');
 const modal = document.getElementById('modal');
@@ -93,7 +55,7 @@ const filtersContainer = document.getElementById('filters');
 const filterSlider = document.getElementById('filter-slider');
 
 // ============================================================
-// 4. Вспомогательные функции
+// 5. Вспомогательные функции
 // ============================================================
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
@@ -152,7 +114,7 @@ function updateSlider(activeChip) {
 }
 
 // ============================================================
-// 5. Основные функции
+// 6. Основные функции
 // ============================================================
 async function loadMaterials(tags = '', course = '') {
     if (isLoading) return;
@@ -221,13 +183,12 @@ function renderMaterials(materials) {
         `;
     }).join('');
 
-    // Плавная смена: сначала убираем старые карточки с анимацией
+    // Плавная смена
     const oldCards = materialsList.querySelectorAll('.material-card');
     if (oldCards.length) {
         oldCards.forEach(card => card.classList.add('filtering-out'));
         setTimeout(() => {
             materialsList.innerHTML = html;
-            // Добавляем класс filtering-in для появления
             materialsList.querySelectorAll('.material-card').forEach((card, i) => {
                 card.style.animationDelay = (i * 0.06) + 's';
                 card.classList.add('filtering-in');
@@ -240,7 +201,7 @@ function renderMaterials(materials) {
         });
     }
 
-    // Навешиваем обработчики кликов
+    // Обработчики кликов
     document.querySelectorAll('.material-card').forEach(card => {
         card.addEventListener('click', () => {
             const id = card.dataset.id;
@@ -411,7 +372,6 @@ function closeModalHandler() {
 function resetFilters() {
     currentFilter = '';
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    // Скрываем слайдер
     filterSlider.style.width = '0';
     filterSlider.style.left = '0';
     loadMaterials('');
@@ -419,18 +379,65 @@ function resetFilters() {
 }
 
 // ============================================================
-// 6. Обработчики событий
+// 7. Профиль (личный кабинет)
+// ============================================================
+function showProfile() {
+    if (!modalBody) return;
+
+    modalBody.innerHTML = `
+        <div style="text-align: center;">
+            <div class="profile-avatar">${initials || '👤'}</div>
+            <div class="profile-name">${firstName} ${lastName}</div>
+            ${username ? `<div class="profile-username">@${username}</div>` : ''}
+            <div class="profile-id">ID: ${userId || '—'}</div>
+            <div class="profile-stats">
+                <div class="profile-stat-item">
+                    <div class="value">0</div>
+                    <div class="label">Тестов пройдено</div>
+                </div>
+                <div class="profile-stat-item">
+                    <div class="value">0%</div>
+                    <div class="label">Средний результат</div>
+                </div>
+                <div class="profile-stat-item">
+                    <div class="value">0</div>
+                    <div class="label">Материалов просмотрено</div>
+                </div>
+            </div>
+            <button id="profile-close-btn" class="btn" style="margin-top: 24px; width: 100%;">Закрыть</button>
+        </div>
+    `;
+
+    document.getElementById('profile-close-btn')?.addEventListener('click', closeModalHandler);
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('modal-open'));
+}
+
+// ============================================================
+// 8. Обработчики событий
 // ============================================================
 closeModal.addEventListener('click', closeModalHandler);
 modal.addEventListener('click', (e) => {
     if (e.target === modal) closeModalHandler();
 });
 
+// Клик по аватару → профиль
+document.getElementById('profile-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showProfile();
+});
+
+// Клик по заголовку → сброс фильтров
+document.getElementById('library-title')?.addEventListener('click', () => {
+    resetFilters();
+    materialsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// Фильтры
 filtersContainer.addEventListener('click', (e) => {
     const chip = e.target.closest('.filter-chip');
     if (!chip) return;
 
-    // Ripple-эффект
     createRipple(e, chip);
 
     if (chip.id === 'reset-filters') {
@@ -438,13 +445,11 @@ filtersContainer.addEventListener('click', (e) => {
         return;
     }
 
-    // Переключение активности
     const wasActive = chip.classList.contains('active');
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     if (!wasActive) {
         chip.classList.add('active');
     }
-    // Обновляем слайдер
     const activeChip = document.querySelector('.filter-chip.active');
     updateSlider(activeChip);
 
@@ -454,39 +459,21 @@ filtersContainer.addEventListener('click', (e) => {
     loadMaterials(currentFilter);
 });
 
-// Инициализация слайдера (скрыт по умолчанию)
-updateSlider(null);
-
-// ============================================================
-// Горизонтальный скролл фильтров колёсиком мыши
-// ============================================================
+// Горизонтальный скролл колёсиком
 const filtersWrapper = document.getElementById('filters-wrapper');
-
 if (filtersWrapper) {
     filtersWrapper.addEventListener('wheel', function(e) {
-        // Если скролл вертикальный (deltaY), преобразуем в горизонтальный
         if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
             e.preventDefault();
             this.scrollLeft += e.deltaY;
         }
-        // Если уже горизонтальный (deltaX) — оставляем как есть
     }, { passive: false });
 }
 
-// ============================================================
-// Фича: клик по заголовку "Библиотека" → сброс фильтров
-// ============================================================
-const libraryTitle = document.getElementById('library-title');
-if (libraryTitle) {
-    libraryTitle.addEventListener('click', () => {
-        resetFilters();
-        // Плавно скроллим к началу списка
-        materialsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-}
-
+// Инициализация слайдера (скрыт)
+updateSlider(null);
 
 // ============================================================
-// 7. Запуск
+// 9. Запуск
 // ============================================================
 loadMaterials('');

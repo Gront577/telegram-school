@@ -54,19 +54,38 @@ header h1 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
+    display: inline-block;
+    margin-bottom: 0;
 }
 
-/* ===== ФИЛЬТРЫ (горизонтальный скролл) ===== */
+/* ===== АВАТАР ===== */
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+    color: #fff;
+    text-transform: uppercase;
+    user-select: none;
+    transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.05);
+}
+
+/* ===== ФИЛЬТРЫ ===== */
 #filters-wrapper {
     position: relative;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
     padding: 6px 0 16px;
     margin-bottom: 4px;
     display: flex;
@@ -87,7 +106,6 @@ header h1 {
     flex-wrap: nowrap;
 }
 
-/* Индикатор активной вкладки (слайдер) */
 #filter-slider {
     position: absolute;
     bottom: 0;
@@ -141,7 +159,7 @@ header h1 {
     background: rgba(239, 68, 68, 0.2);
 }
 
-/* Ripple-эффект для чипсов */
+/* Ripple-эффект */
 .ripple {
     position: absolute;
     border-radius: 50%;
@@ -190,7 +208,6 @@ header h1 {
     100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Анимация исчезновения при фильтрации */
 .material-card.filtering-out {
     animation: cardFadeOut 0.3s ease forwards;
 }
@@ -204,7 +221,6 @@ header h1 {
     animation: cardAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* ===== Остальные стили карточек ===== */
 .card-header {
     display: flex;
     align-items: center;
@@ -385,7 +401,7 @@ header h1 {
     margin-top: 8px;
 }
 
-/* ===== КНОПКИ С RIPPLE ===== */
+/* ===== КНОПКИ ===== */
 .btn {
     position: relative;
     overflow: hidden;
@@ -432,6 +448,67 @@ header h1 {
 
 .btn-success:hover {
     background: linear-gradient(135deg, #6ee7b7, #10b981);
+}
+
+/* ===== ПРОФИЛЬ ===== */
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 32px;
+    color: #fff;
+    margin: 0 auto 16px;
+    text-transform: uppercase;
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    color: #fff;
+}
+
+.profile-username {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 16px;
+    margin-top: 4px;
+}
+
+.profile-id {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.profile-stat-item {
+    text-align: center;
+}
+
+.profile-stat-item .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #818cf8;
+}
+
+.profile-stat-item .label {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 4px;
 }
 
 /* ===== СОСТОЯНИЯ ===== */
@@ -511,86 +588,4 @@ header h1 {
     .filter-chip { font-size: 13px; padding: 6px 16px; }
     .material-card { padding: 18px 20px; }
     .modal-content { padding: 24px 20px; }
-}
-
-/* ===== АВАТАР ===== */
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #818cf8, #c084fc);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 18px;
-    color: #fff;
-    text-transform: uppercase;
-    user-select: none;
-    transition: transform 0.2s ease;
-}
-
-.avatar:hover {
-    transform: scale(1.05);
-}
-
-/* ===== ПРОФИЛЬ (внутри модалки) ===== */
-.profile-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #818cf8, #c084fc);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 32px;
-    color: #fff;
-    margin: 0 auto 16px;
-    text-transform: uppercase;
-}
-
-.profile-name {
-    font-size: 22px;
-    font-weight: 600;
-    text-align: center;
-    color: #fff;
-}
-
-.profile-username {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 16px;
-    margin-top: 4px;
-}
-
-.profile-id {
-    text-align: center;
-    color: #64748b;
-    font-size: 14px;
-    margin-top: 2px;
-}
-
-.profile-stats {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-}
-
-.profile-stat-item {
-    text-align: center;
-}
-
-.profile-stat-item .value {
-    font-size: 24px;
-    font-weight: 700;
-    color: #818cf8;
-}
-
-.profile-stat-item .label {
-    font-size: 13px;
-    color: #94a3b8;
-    margin-top: 4px;
 }
